@@ -67,3 +67,54 @@ def catagorize_seat(seat_number):
     else:
         return "lower"
     
+def allocate_next_available_seat(train_number,seat_type):
+    #find the next available seat 
+    #for seat_number in range(1,51):
+    seat_query = c.execute(
+        f"SELECT seat_number FROM seats_{train_number} WHERE booked = 0 AND seat_type = ? ORDER BY seat_number asc",(seat_type) 
+    )
+    result = seat_query.fetchall()
+    #print(result)
+    if result:
+        return result[0]
+    
+def book_ticket(train_number,passenger_name,passenger_age,passenger_gender,seat_type):
+    train_query = c.execute(
+        "SELECT * FROM trains WHERE train_number = ?",(train_number)
+    )    
+    train_data = train_query.fetchone()
+    if train_data:
+        seat_number = allocate_next_available_seat(train_number,seat_type)
+        #updating the seat as booked and storing passenger details
+        if seat_number:
+            c.execute(
+                f"UPDATE seats_{train_number} SET booked = 1 , seat_type = ? , passenger_name = ? , passenger_age = ? , passenger_gender = ? WHERE seat_number = ?",(seat_type,passenger_name,passenger_age,passenger_gender,seat_number[0])
+            )
+            conn.commit()
+            st.success(f"Successfully booked seat {seat_number[0]} ({seat_type}) for {passenger_name}.")
+        else:
+            st.error("No available seats for booking in this train.")
+    else:
+        st.error(f"No such train with number {train_number} found")
+        
+def cancel_tickets(train_number,seat_number):
+    train_query = c.execute(
+        "SELECT * FROM trains WHERE train_number = ?", (train_number)
+    )       
+    
+    train_data = train_query.fetchone()
+    
+    if train_data:
+        c.execute(
+            f"UPDATE seats_{train_number} SET booked = 0 , passenger_name = '' , passenger_age = '' , passenger_gender = '' WHERE seat_number = ?",(seat_number))
+        conn.commit()
+        st.success(f"Successfully canceled seat {seat_number} from {train_number}")
+    else:
+        st.error(f"No such train with train number = {train_number} is available.")
+        
+def search_train_by_train_number(train_number):
+    train_query = c.execute(
+        "SELECT * FROM trains WHERE train_number = ?",(train_number)
+    )
+    train_data = train_query.fetchone()
+    return train_data
