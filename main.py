@@ -118,3 +118,40 @@ def search_train_by_train_number(train_number):
     )
     train_data = train_query.fetchone()
     return train_data
+
+def view_seats(train_number):
+    train_query = c.execute(
+        "SELECT * FROM trains WHERE train_number = ?",(train_number)
+    )
+    train_data = train_query.fetchone()
+    if train_data:
+        seat_query = c.execute(
+            f"SELECT 'Number:' || seat_number, '\n Type:' || seat_type, '\n Name:' || passenger_name, '\n Age:' || passenger_age, '\n Gender:' || passenger_gender as Details , booked FROM seats_{train_number} ORDER BY seat_number ASC"
+        )
+        result = seat_query.fetchall()
+        if result:
+            st.dataframe(data = result)
+        else:
+            st.error(f"No such train with number {train_number} is available.")
+
+def train_functions():
+    st.title("TRAIN ADMIN")
+    functions = st.sidebar.selectbox("SELECT train functions", [
+        "Add Train" , "View Train" , "Search Train" , "Delete Train" , "Book Ticket" , "Cancel Ticket" , "View Seats"
+    ])
+    if functions == "Add Train":
+        st.header("Add new train.")
+        with st.form(key = 'new_train_details'):
+            train_number = st.text_input("Train Number")
+            train_name = st.text_input("Train Name")
+            departure_date = st.text_input("Departure Date")
+            starting_destination = st.text_input("Starting destination")
+            ending_destination = st.text_input("Ending destination")
+            submitted = st.form_submit_button("Add Train")
+            
+        if submitted and train_number != '' and train_name != '' and departure_date != '' and starting_destination != '' and ending_destination != '':
+            add_train(train_number,train_name,departure_date,starting_destination,ending_destination)
+            st.success("Train added successfully")
+            
+            
+            
