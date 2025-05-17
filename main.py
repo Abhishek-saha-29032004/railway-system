@@ -153,5 +153,82 @@ def train_functions():
             add_train(train_number,train_name,departure_date,starting_destination,ending_destination)
             st.success("Train added successfully")
             
+    elif functions == "View Trains":
+        st.title('View all trains')
+        #query all available trains from the database.
+        train_query = c.execute('SELECT * FROM trains')
+        trains = train_query.fetchall()
+        
+        if trains:
+            st.header("Available trains ")
+            st.dataframe(data = trains)
+        else:
+            st.error("No trains available now")
             
-            
+    elif functions == "Search Train":
+        st.title("Train detail search")
+        st.write("Search by train number")
+        train_number = st.text_input("Enter a train number:")
+        st.write("Search by starting and ending destination:")
+        starting_destination = st.text_input("Starting Destination:")
+        ending_destination = st.text_input("Ending Destination:")
+        
+        if st.button("Search by train number"):
+            if train_number:
+                train_data = search_train_by_train_number(train_number)
+                if train_data:
+                    st.header("Search Result:")
+                    df = pd.DataFrame([train_data],columns=["Train Number","Train Name","Departure Date","Starting Destination","Ending Destination"])
+                    st.table(df)
+                else:
+                    st.error("No trains found for the given destination.")
+                    
+    elif functions == "Delete Trains":
+        st.title("Delete Train")
+        train_number = st.text_input("Enter a train number:")
+        departure_date = st.date_input("Departure Date of the train")
+        
+        if st.button("Delete Train"):
+            if train_number:
+                c.execute(f"DROP TABLE IF EXISTS seats_{train_number}")
+                delete_train(train_number,departure_date)
+                
+    elif functions == "Book Ticket":
+        st.title("Book Train Ticket")
+        train_number = st.text_input("Enter train number:")
+        seat_type = st.selectbox(
+            'Seat Type : ',["Aisle","Window","Middle"], index = 0
+        )
+        
+        passenger_name = st.text_input("Enter the name:")
+        passenger_age = st.number_input("Enter age:",min_value=1)
+        passenger_gender = st.selectbox(
+            "Passenger Gender:",['Male','Female','Non-Binary'],index=0
+        )
+        
+        if st.button("Book Ticket"):
+            if train_number and passenger_name and passenger_age and passenger_gender:
+                book_ticket(train_number,passenger_name,passenger_age,passenger_gender,seat_type)
+    
+    elif functions == "Cancel Ticket":
+        st.title("Tickets Cancelled.")
+        train_number = st.text_input("Enter train number:")
+        seat_number = st.number_input("Enter seat number:",min_value=1)
+        
+        if st.button("Cancel Ticket"):
+            if train_number and seat_number:
+                cancel_tickets(train_number,seat_number)
+                
+    elif functions == "View Seats":
+        st.title("View seats")
+        train_number = st.text_input("Enter train number:")
+        if st.button("Submit"):
+            if train_number:
+                view_seats(train_number)
+                
+train_functions()
+conn.close()
+
+conn.close()
+
+              
